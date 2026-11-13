@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Owlnest — Think Smart. Stay Ahead.</title>
+    <meta name="description" content="Owlnest — Think Smart. Stay Ahead.">
+    <meta name="application-name" content="Owlnest">
+    <meta name="theme-color" content="#F5F1E5">
+    <meta property="og:title" content="Owlnest">
+    <meta property="og:description" content="Think Smart. Stay Ahead.">
+
+    <!-- PWA: manifest + ikon (logo hanya digunakan untuk ikon app, tidak dipaparkan dalam web) -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" href="assets/icons/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icons/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Owlnest">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="js/tailwind-config.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Icon libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous"></script>
+    <!-- Tesseract OCR (scan resit) -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+    <!-- PDF.js (baca resit PDF) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <!-- Stylesheet app -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/auth.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/finance.css">
+    <link rel="stylesheet" href="css/start-page.css">
+    <link rel="stylesheet" href="css/brand.css">
+    <link rel="stylesheet" href="css/theme.css">
+    <link rel="stylesheet" href="css/overrides.css">
+</head>
+<body class="h-full flex flex-col md:flex-row overflow-hidden auth-locked">
+
+    <!-- ========== AUTH SCREEN (Login / Register) ========== -->
+    <div id="auth-screen" class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4">
+        <div class="batik-modal rounded-2xl w-full max-w-sm overflow-hidden">
+            <div class="p-5 flex items-center space-x-3 border-b-2 border-slate-900 bg-sky-50">
+                <div>
+                    <h1 class="brand-wordmark text-xl">Owlnest</h1>
+                    <p class="brand-tagline mt-1.5">Think Smart. Stay Ahead.</p>
+                </div>
+            </div>
+
+            <!-- Checking session -->
+            <div id="auth-loading" class="p-8 text-center text-xs font-bold text-slate-600">Checking your session...</div>
+
+            <div id="auth-panel" class="hidden">
+                <div class="grid grid-cols-2 border-b-2 border-slate-900">
+                    <button type="button" id="auth-tab-login" onclick="switchAuthMode('login')" class="py-3 text-xs font-extrabold text-slate-900 bg-sky-100">Login</button>
+                    <button type="button" id="auth-tab-register" onclick="switchAuthMode('register')" class="py-3 text-xs font-extrabold text-slate-600 hover:bg-sky-50 border-l-2 border-slate-900">Register</button>
+                </div>
+
+                <div id="auth-message" class="hidden mx-4 mt-4 px-3 py-2 rounded-xl border-2 text-xs font-bold" role="alert"></div>
+
+                <!-- Login -->
+                <form id="form-login" onsubmit="handleLogin(event)" class="p-4 space-y-3">
+                    <div>
+                        <label for="login-email" class="block text-[10px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Email</label>
+                        <input type="email" id="login-email" required autocomplete="email" class="w-full px-3 py-2 rounded-xl bg-white border-2 border-slate-900 text-slate-900 focus:outline-none text-xs font-bold shadow-[2px_2px_0_0_#64748b]">
+                    </div>
+                    <div>
+                        <label for="login-password" class="block text-[10px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Password</label>
+                        <input type="password" id="login-password" required autocomplete="current-password" class="w-full px-3 py-2 rounded-xl bg-white border-2 border-slate-900 text-slate-900 focus:outline-none text-xs font-bold shadow-[2px_2px_0_0_#64748b]">
+                    </div>
+                    <button type="submit" id="login-btn" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold border-2 border-slate-900 shadow-[2px_2px_0_0_#64748b]">Login</button>
+                </form>
+
+                <!-- Register -->
+                <form id="form-register" onsubmit="handleRegister(event)" class="hidden p-4 space-y-3">
+                    <div>
+                        <label for="register-email" class="block text-[10px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Email</label>
+                        <input type="email" id="register-email" required autocomplete="email" class="w-full px-3 py-2 rounded-xl bg-white border-2 border-slate-900 text-slate-900 focus:outline-none text-xs font-bold shadow-[2px_2px_0_0_#64748b]">
+                    </div>
+                    <div>
+                        <label for="register-password" class="block text-[10px] font-extrabold text-slate-700 uppercase tracking-wider mb-1">Password (min. 6 characters)</label>
+                        <input type="password" id="register-password" required minlength="6" autocomplete="new-password" class="w-full px-3 py-2 rounded-xl bg-white border-2 border-slate-900 text-slate-900 focus:outline-none text-xs font-bold shadow-[2px_2px_0_0_#64748b]">
+                    </div>
+                    <button type="submit" id="register-btn" class="w-full px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold border-2 border-slate-900 shadow-[2px_2px_0_0_#64748b]">Create account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== START PAGE (first page after login: schedule image only) ========== -->
+    <div id="start-page" class="hidden fixed inset-0 z-[45] overflow-y-auto">
+        <div class="min-h-full flex flex-col items-center p-4 sm:p-6">
+            <div class="w-full max-w-6xl space-y-4">
+                <div class="flex flex-wrap items-center justify-end gap-2">
+                    <button type="button" onclick="enterDashboard()" class="inline-flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs border-2 border-slate-900 shadow-[3px_3px_0_0_#64748b] transition-all">
+                        <span>Go to Dashboard</span>
+                        <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                <div id="start-paste-panel">
+                    <div class="text-center mb-2">
+                        <h2 class="font-heading text-[11px] font-extrabold uppercase tracking-wide inline-block">Paste Receipt <span class="normal-case font-bold text-slate-600">· click a category, then Ctrl + V</span></h2>
+                        <button type="button" onclick="pasteIntoActiveSlot()" class="ml-2 align-middle text-[10px] font-bold bg-white hover:bg-gray-100 text-black px-2 py-0.5 rounded-md border border-black">Paste from clipboard</button>
+                    </div>
+                    <div id="startSlots"></div>
+                </div>
+                <div id="start-image-wrap" class="hidden">
+                    <img id="startScheduleImg" src="" alt="Schedule" class="block mx-auto max-w-full h-auto">
+                </div>
+                <p id="start-empty" class="hidden text-center text-xs font-bold text-slate-400 py-10">No schedule image yet. Upload one in the Schedule page.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Header -->
+    <header class="md:hidden bg-white/90 backdrop-blur-md border-b-2 border-slate-900 px-4 py-3 flex items-center justify-between z-30 shadow-[0_4px_0_0_#64748b] shrink-0">
+        <div class="flex items-center space-x-2">
+            <span class="brand-wordmark text-base">Owlnest</span>
+        </div>
+        <button id="mobile-menu-btn" class="p-2 text-slate-800 hover:text-sky-600 focus:outline-none">
+            <i data-lucide="menu" class="w-6 h-6"></i>
+        </button>
+    </header>
+
+    <!-- Sidebar Navigation -->
+    <aside id="sidebar" class="fixed inset-y-0 left-0 z-40 w-64 bg-white border-r-2 border-slate-900 transform -translate-x-full md:translate-x-0 transition-transform duration-200 ease-in-out flex flex-col shrink-0 shadow-[4px_0_0_0_rgba(100,116,139,0.2)]">
+        <div class="px-4 py-3.5 flex items-center justify-between border-b-2 border-slate-900 bg-sky-50">
+            <div class="flex items-center space-x-2.5">
+                <div>
+                    <h1 class="brand-wordmark text-base leading-tight">Owlnest</h1>
+                    <p class="brand-tagline mt-0.5" style="font-size:0.62rem">Think Smart. Stay Ahead.</p>
+                </div>
+            </div>
+            <button id="close-sidebar" class="md:hidden text-slate-800 hover:text-rose-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <nav class="flex-1 px-3 py-6 space-y-3 overflow-y-auto">
+            <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all text-slate-700 hover:bg-sky-50 hover:text-sky-700 border-2 border-transparent hover:border-slate-900">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+                <span>Smart Dashboard</span>
+            </button>
+            <button onclick="switchTab('schedule')" id="nav-schedule" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all text-slate-700 hover:bg-sky-50 hover:text-sky-700 border-2 border-transparent hover:border-slate-900">
+                <i data-lucide="calendar" class="w-4 h-4"></i>
+                <span>Schedule</span>
+            </button>
+            <button onclick="switchTab('kewangan')" id="nav-kewangan" class="nav-btn w-full flex items-center space-x-3 px-3.5 py-3 rounded-xl text-sm font-semibold transition-all text-slate-700 hover:bg-sky-50 hover:text-sky-700 border-2 border-transparent hover:border-slate-900">
+                <i data-lucide="wallet" class="w-4 h-4"></i>
+                <span>My Finance</span>
+            </button>
+        </nav>
+
+        <div id="api-status-badge" data-status="idle" class="px-4 pt-2 pb-2 text-center text-[10px] font-bold truncate">Local Mode</div>
+
+        <div class="p-4 border-t-2 border-slate-900 bg-slate-50 space-y-2">
+            <div class="px-1 text-[10px] font-bold text-slate-500 truncate">Signed in as <span id="auth-user-email" class="text-slate-800"></span></div>
+            <button onclick="handleLogout()" id="logout-btn" class="w-full flex items-center justify-center space-x-1.5 py-2 px-3 text-[11px] font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl border-2 border-slate-900 shadow-[2px_2px_0_0_#64748b] transition-colors">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i>
+                <span>Logout</span>
+            </button>
+            <button onclick="resetDemoData()" class="w-full flex items-center justify-center space-x-1.5 py-2 px-3 text-[11px] font-bold text-rose-700 hover:bg-rose-50 rounded-xl border border-rose-300 transition-colors">
+                <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                <span>Reset Data</span>
+            </button>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative md:pl-64">
+        
+
+        <div class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto w-full">
+            
+            <!-- VIEW: SMART DASHBOARD -->
+            <section id="view-dashboard" class="smart-theme space-y-3">
+                <!-- 1. KOTAK HEADER PENGGUNA -->
+                <div class="w-full relative flex-shrink-0">
+                    <div id="wallpaperBox" class="w-full relative">
+                        <!-- 50% ATAS: wallpaper -->
+                        <div class="hdr-top relative overflow-hidden">
+                            <img id="wallpaperImg" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+                                 alt="Wallpaper" class="absolute inset-0 w-full h-full object-cover">
+                            <div class="absolute top-2 inset-x-0 flex justify-center z-20 pointer-events-none"><span class="pointer-events-auto"><button onclick="openProfileModal()" class="neo-btn bg-white hover:bg-gray-100 text-black px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 z-20">
+                            <i class="fa-solid fa-pen-to-square"></i> Edit Profile
+                        </button></span></div>
+                        </div>
+
+                        <!-- Gambar pengguna di tengah garis -->
+                        <div class="hdr-avatar">
+                            <div class="hdr-av-box neo-box bg-white rounded-2xl overflow-hidden">
+                                    <img id="profileImg" src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+                                         alt="User" class="w-full h-full object-cover">
+                                </div>
+                        </div>
+
+                        <!-- 50% BAWAH: nama, course, masa, pomodoro -->
+                        <div class="hdr-bottom">
+                            <div class="hdr-left">
+<div class="hdr-time"><!-- Masa -->
+                            <div class="neo-box-flat paper-box px-2.5 py-1 flex items-center justify-center gap-1.5 whitespace-nowrap">
+                                <span class="text-[9px] md:text-[10px] font-black uppercase text-black">Time</span>
+                                <div id="liveClock" class="font-heading text-xs md:text-sm font-black text-black">02:45 PM</div>
+                                <span id="liveDate" class="text-[11px] font-bold text-black">Wednesday, 24 May 2026</span>
+                            </div></div>
+<div class="hdr-pomo"><!-- Pomodoro -->
+                            <div class="neo-box-flat paper-box px-3 py-1 flex items-center justify-center gap-2 whitespace-nowrap">
+                                <span class="text-[9px] md:text-[10px] font-black uppercase text-black">Pomodoro</span>
+                                <div id="pomoTimer" class="font-heading text-xs md:text-sm font-extrabold text-black">25:00</div>
+                                <div class="flex items-center gap-1">
+                                    <button id="pomoBtn" onclick="togglePomodoro()" class="neo-btn-flat bg-white hover:bg-gray-100 text-black px-2 py-1 rounded-lg text-[9px] font-black uppercase">START</button>
+                                    <button onclick="resetPomodoro()" class="neo-btn-flat bg-white hover:bg-gray-100 text-black px-1.5 py-1 rounded-lg text-[9px] font-black">
+                                        <i class="fa-solid fa-rotate-right"></i>
+                                    </button>
+                                    <button onclick="openPomoModal()" class="neo-btn-flat bg-white hover:bg-gray-100 text-black px-1.5 py-1 rounded-lg text-[9px] font-black" title="Pomodoro Settings">
+                                        <i class="fa-solid fa-gear"></i>
+                                    </button>
+                                </div>
+                            </div></div>
+</div>
+<div class="hdr-name"><div class="flex flex-col justify-center">
+                                <h1 id="userName" class="font-heading text-base md:text-xl font-black text-black tracking-wide leading-tight">MUHAMMAD LUQMAN</h1>
+                                <p id="userCourse" class="text-xs md:text-sm font-bold text-gray-700 leading-tight mt-0.5">Ijazah Sarjana Muda Sains Komputer</p>
+</div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. MAIN CONTENT GRID -->
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 items-stretch">
+
+                    <!-- LAJUR KIRI (3 COLS) -->
+                    <div class="md:col-span-3 flex flex-col gap-3 md:self-start">
+                        <div class="flex flex-col gap-2.5">
+                            <!-- CGPA & TARGET CGPA (disunting melalui Edit Profile) -->
+                            <div class="grid grid-cols-2 gap-2">
+                                <div class="box-shadowed neo-box denim-box p-2.5 rounded-xl flex flex-col justify-between">
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-black">CGPA</span>
+                                    <div id="cgpaVal" class="font-heading text-xl md:text-2xl font-black mt-1 text-black">3.75</div>
+                                </div>
+                                <div class="box-shadowed neo-box denim-box p-2.5 rounded-xl flex flex-col justify-between">
+                                    <span class="text-[10px] font-black uppercase tracking-wider text-black">TARGET CGPA</span>
+                                    <div id="targetGpaVal" class="font-heading text-xl md:text-2xl font-black mt-1 text-black">3.85</div>
+                                </div>
+                            </div>
+
+                            <!-- MINGGU -->
+                            <div class="box-shadowed neo-box denim-box p-3 rounded-xl flex flex-col items-center justify-center text-center relative">
+                                <button onclick="openWeekModal()" class="absolute top-2 right-2 neo-btn bg-white text-black hover:bg-gray-100 w-6 h-6 rounded-md text-[10px] flex items-center justify-center font-bold" title="Week Settings">
+                                    <i class="fa-solid fa-sliders"></i>
+                                </button>
+                                <div id="currentWeekDisplay" class="font-heading text-2xl font-black my-2 text-black">Week 08</div>
+                                <div class="w-full bg-white h-1.5 rounded-full border border-black overflow-hidden mt-1">
+                                    <div id="weekProgressBar" class="bg-black h-full w-[57%] transition-all duration-300"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- KALENDAR BULANAN -->
+                        <div class="box-shadowed neo-box denim-box p-3 rounded-xl flex flex-col justify-between">
+                            <div>
+                                <div class="flex items-center justify-between border-b-2 border-black pb-1.5 mb-2">
+                                    <button onclick="changeMonth(-1)" class="neo-btn bg-white px-2 py-0.5 rounded text-xs"><i class="fa-solid fa-chevron-left"></i></button>
+                                    <span id="calMonthTitle" class="font-heading text-xs font-black uppercase">May 2026</span>
+                                    <button onclick="changeMonth(1)" class="neo-btn bg-white px-2 py-0.5 rounded text-xs"><i class="fa-solid fa-chevron-right"></i></button>
+                                </div>
+                                <div class="grid grid-cols-7 text-center text-xs font-black mb-1 border-b border-black/20 pb-1">
+                                    <span class="text-red-600">S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span class="text-blue-600">S</span>
+                                </div>
+                                <div id="miniCalendarGrid" class="grid grid-cols-7 gap-1 text-center items-center py-1"></div>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- LAJUR KANAN (9 COLS): ASSESSMENT & STUDY TRACKER -->
+                    <section id="assessmentBox" class="md:col-span-9 box-shadowed neo-box bg-white p-3 md:p-4 rounded-xl flex flex-col justify-between self-start min-h-full">
+                        <div>
+                            <div class="relative flex flex-col items-center gap-2 md:flex-row md:justify-center pb-1 flex-shrink-0">
+                                <h2 class="font-heading text-xs md:text-sm font-extrabold uppercase tracking-wide text-center inline-block border-b-2 border-black pb-1">Assessment & Study Tracker</h2>
+                                <button onclick="openCourseModal()" class="neo-btn bg-black hover:bg-gray-800 text-white text-[10px] md:text-xs font-black px-3 py-1 rounded-lg flex items-center gap-1 md:absolute md:right-0 md:top-0">
+                                    <i class="fa-solid fa-plus"></i> Add Course
+                                </button>
+                            </div>
+                            <div id="courseContainer" class="my-3 space-y-3"></div>
+                        </div>
+                    </section>
+
+                </div>
+            </section>
+
+            <!-- VIEW: COURSE PAGE (opens from a course file in Assessment tracker) -->
+            <section id="view-course" class="smart-theme hidden space-y-4">
+                <div class="flex items-center justify-between gap-2">
+                    <button onclick="closeCoursePage()" class="sheet-back">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Smart Dashboard
+                    </button>
+                    <button onclick="openEditCourse(currentCourseId)" class="sheet-edit">
+                        <i class="fa-solid fa-pen"></i> Edit
+                    </button>
+                </div>
+                <div id="coursePageBody" class="space-y-4"></div>
+            </section>
+
+            <!-- VIEW: MY KEWANGAN -->
+            <section id="view-kewangan" class="kew-theme hidden space-y-6">
+                <div class="bordered-card p-1.5 inline-flex items-center gap-1">
+                    <button onclick="switchKewTab('pelan')" id="kew-tab-pelan" class="px-4 py-2 rounded-lg text-xs font-bold bg-slate-900 text-white border border-slate-900 transition cursor-pointer">Financial Plan</button>
+                    <button onclick="switchKewTab('rekod')" id="kew-tab-rekod" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-700 hover:bg-slate-100 border border-transparent hover:border-slate-300 transition cursor-pointer">Financial Records</button>
+                </div>
+
+                <!-- ================= TAB 1: PELAN KEWANGAN ================= -->
+                <div id="kew-pelan" class="space-y-6">
+                    <!-- Financial level meter (no box) -->
+                    <div id="financeMeter" class="flex flex-col items-center text-center px-2">
+                        <svg viewBox="0 0 260 148" class="w-full max-w-[190px]" role="img" aria-label="Financial level meter">
+                            <path d="M12.00 130.00A118 118 0 0 1 26.10 74.06L66.61 95.87A72 72 0 0 0 58.00 130.00Z" fill="#4CAF3A"/><path d="M29.60 67.99A118 118 0 0 1 67.99 29.60L92.17 68.74A72 72 0 0 0 68.74 92.17Z" fill="#78DD4F"/><path d="M74.06 26.10A118 118 0 0 1 126.50 12.05L127.86 58.03A72 72 0 0 0 95.87 66.61Z" fill="#FFFC52"/><path d="M133.50 12.05A118 118 0 0 1 185.94 26.10L164.13 66.61A72 72 0 0 0 132.14 58.03Z" fill="#F6CB44"/><path d="M192.01 29.60A118 118 0 0 1 230.40 67.99L191.26 92.17A72 72 0 0 0 167.83 68.74Z" fill="#E85625"/><path d="M233.90 74.06A118 118 0 0 1 248.00 130.00L202.00 130.00A72 72 0 0 0 193.39 95.87Z" fill="#E63427"/>
+                            <g transform="translate(130 130)">
+                                <g id="meterNeedle" style="transform: rotate(-90deg); transition: transform 1.1s cubic-bezier(.34,1.4,.5,1);">
+                                    <polygon points="0,-64 -5.5,-5 5.5,-5" fill="#000"/>
+                                    <circle cx="0" cy="0" r="9" fill="#fff" stroke="#000" stroke-width="4.5"/>
+                                </g>
+                            </g>
+                        </svg>
+                        <div id="meterLevel" class="text-xs font-black text-slate-900">Financial Level</div>
+                        <p id="meterDesc" class="mt-0.5 text-[11px] font-semibold text-slate-600 max-w-sm leading-snug">Add your income and estimated expenses to see your financial level.</p>
+                    </div>
+
+                    <section class="flex flex-col sm:flex-row sm:items-stretch gap-2 sm:gap-3">
+                        <div class="bordered-card p-4 flex items-center justify-between border-l-4 border-l-emerald-500 sm:flex-1 min-w-0">
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Income</span>
+                                <div class="text-2xl font-black text-slate-900 mt-1" id="summaryTotalIncome">RM 0.00</div>
+                            </div>
+                            <div class="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center text-lg"><i class="ph-bold ph-arrow-down-left"></i></div>
+                        </div>
+                        <div class="flex items-center justify-center flex-shrink-0 self-center w-8 h-8 rounded-full border border-slate-300 bg-white text-lg font-black text-slate-700 leading-none" aria-label="minus">−</div>
+                        <div class="bordered-card p-4 flex items-center justify-between border-l-4 border-l-rose-500 sm:flex-1 min-w-0">
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Expenses</span>
+                                <div class="text-2xl font-black text-slate-900 mt-1" id="summaryTotalExpense">RM 0.00</div>
+                            </div>
+                            <div class="w-10 h-10 rounded-lg bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center text-lg"><i class="ph-bold ph-arrow-up-right"></i></div>
+                        </div>
+                        <div class="flex items-center justify-center flex-shrink-0 self-center w-8 h-8 rounded-full border border-slate-300 bg-white text-lg font-black text-slate-700 leading-none" aria-label="equals">=</div>
+                        <div class="bordered-card p-4 flex items-center justify-between border-l-4 border-l-blue-500 sm:flex-1 min-w-0">
+                            <div>
+                                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Net Balance</span>
+                                <div class="text-2xl font-black text-slate-900 mt-1" id="summaryNetBalance">RM 0.00</div>
+                            </div>
+                            <div class="w-10 h-10 rounded-lg bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-lg"><i class="ph-bold ph-scales"></i></div>
+                        </div>
+                    </section>
+
+                    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- DUIT MASUK -->
+                        <div class="lg:col-span-5 bordered-card p-5 space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i class="ph-bold ph-wallet text-slate-600"></i> Income</h3>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="resetIncomeAmounts()" title="Reset Amounts" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md border border-slate-300 transition">Reset</button>
+                                    <button onclick="addIncomeRow()" class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white px-3 py-1 rounded-md border border-slate-900 transition flex items-center gap-1"><i class="ph-bold ph-plus"></i> Add</button>
+                                </div>
+                            </div>
+                            <div id="incomeList" class="space-y-2"></div>
+                        </div>
+
+                        <!-- ANGGARAN DUIT KELUAR -->
+                        <div class="lg:col-span-7 bordered-card p-5 space-y-4">
+                            <div class="flex items-center justify-between pb-3 border-b border-slate-200">
+                                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i class="ph-bold ph-list-checks text-slate-600"></i> Estimated Expenses</h3>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="resetExpenseAmounts()" title="Reset Amounts" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-md border border-slate-300 transition">Reset</button>
+                                    <button onclick="addExpenseRow()" class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white px-3 py-1 rounded-md border border-slate-900 transition flex items-center gap-1"><i class="ph-bold ph-plus"></i> Add</button>
+                                </div>
+                            </div>
+                            <div id="expenseList" class="space-y-2"></div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- ================= TAB 2: REKOD KEWANGAN ================= -->
+                <div id="kew-rekod" class="space-y-6 hidden">
+                    <section class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                        <!-- BORANG REKOD -->
+                        <div class="lg:col-span-5 bordered-card p-5 space-y-4">
+                            <div class="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-200">
+                                <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2"><i class="ph-bold ph-plus-circle text-slate-600"></i> Daily Expense Record</h3>
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <button type="button" onclick="openReceiptModal('paste')" class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white px-3 py-1 rounded-md border border-slate-900 transition flex items-center gap-1 cursor-pointer"><i class="ph-bold ph-clipboard-text"></i> Paste Receipt</button>
+                                    <button type="button" onclick="openReceiptModal('upload')" class="text-xs font-semibold bg-white hover:bg-slate-100 text-slate-900 px-3 py-1 rounded-md border border-slate-900 transition flex items-center gap-1 cursor-pointer"><i class="ph-bold ph-upload-simple"></i> Upload Receipt</button>
+                                    <button type="button" onclick="resetBatchFormInputs()" class="text-xs font-semibold text-slate-600 hover:text-slate-900 transition underline">Reset Form</button>
+                                </div>
+                            </div>
+                            <form id="txForm" onsubmit="handleBatchTransactionSubmit(event)" class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-1">Expense Date</label>
+                                    <input type="date" id="txDate" required class="clean-input w-full px-3 py-1.5 text-xs font-semibold text-slate-800">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-600 mb-2">Enter Amount by Category (RM)</label>
+                                    <div id="categoryInputsList" class="space-y-1.5"></div>
+                                </div>
+                                <button type="submit" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-lg text-xs transition border border-slate-900 flex items-center justify-center gap-2">
+                                    <i class="ph-bold ph-floppy-disk"></i> Save Expense Record
+                                </button>
+                            </form>
+                        </div>
+
+                        <!-- RINGKASAN & CARTA -->
+                        <div class="lg:col-span-7 space-y-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="bordered-card p-4 space-y-1 border-t-2 border-t-slate-700">
+                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">This Month's Budget</span>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-extrabold text-slate-500">RM</span>
+                                        <input type="number" step="0.01" min="0" id="monthlyBudgetInput" onchange="updateMonthlyBudget(this.value)" placeholder="0.00" class="clean-input w-full px-2.5 py-1 text-sm font-bold text-slate-900 text-right">
+                                    </div>
+                                </div>
+                                <div class="bordered-card p-4 space-y-1 border-t-2 border-t-rose-500">
+                                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Spent This Month</span>
+                                    <div class="text-xl font-black text-rose-600 mt-1" id="monthlySpentDisplay">RM 0.00</div>
+                                </div>
+                            </div>
+
+                            <div class="bordered-card p-5 flex flex-col sm:flex-row items-center justify-between gap-6">
+                                <div class="relative w-36 h-36 flex-shrink-0">
+                                    <canvas id="pieChartCanvas" class="w-full h-full" width="144" height="144"></canvas>
+                                </div>
+                                <div class="flex-1 w-full space-y-2">
+                                    <h4 class="font-bold text-xs text-slate-900 pb-2 border-b border-slate-200">Monthly Category Breakdown</h4>
+                                    <div id="pieLegend" class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-xs"></div>
+                                </div>
+                            </div>
+
+                            <div class="bordered-card p-4 space-y-3">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-slate-200">
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-xs font-bold text-slate-600">Month:</span>
+                                        <input type="month" id="filterMonth" onchange="renderTransactions()" class="clean-input px-2.5 py-1 text-xs font-semibold text-slate-800">
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="text" id="searchTx" oninput="renderTransactions()" placeholder="Search..." class="clean-input px-2.5 py-1 text-xs font-medium text-slate-800 w-full sm:w-36">
+                                        <select id="filterCategory" onchange="renderTransactions()" class="clean-input px-2.5 py-1 text-xs font-medium text-slate-800">
+                                            <option value="all">All</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="overflow-x-auto custom-scrollbar">
+                                    <table class="w-full text-left text-xs border-collapse">
+                                        <thead class="bg-slate-100 text-slate-700 uppercase font-bold border-b border-slate-300">
+                                            <tr>
+                                                <th class="py-2 px-3 border-r border-slate-200">Date</th>
+                                                <th class="py-2 px-3 border-r border-slate-200">Category</th>
+                                                <th class="py-2 px-3 text-right border-r border-slate-200">Amount</th>
+                                                <th class="py-2 px-3 text-center">Delete</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="txTableBody" class="divide-y divide-slate-200 font-medium"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            <!-- VIEW: SCHEDULE -->
+            <section id="view-schedule" class="space-y-6 hidden">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                        <h3 class="font-extrabold text-base text-slate-900">Schedule</h3>
+                        <p class="text-xs text-slate-600">Upload an image of your timetable</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Start Page ON / OFF -->
+                        <button type="button" id="schedule-toggle" role="switch" aria-checked="true" onclick="toggleStartPage()" title="When ON, the first page you see after logging in shows only your schedule."
+                            class="inline-flex items-center gap-2 bg-white px-3 py-2 rounded-xl border-2 border-slate-900 shadow-[3px_3px_0_0_#64748b] text-xs font-bold text-slate-900">
+                            <span class="uppercase tracking-wider text-[11px] font-extrabold">Start Page</span>
+                            <span id="schedule-toggle-track" class="relative inline-block w-12 h-6 rounded-full border-2 border-slate-900 bg-emerald-400 transition-colors">
+                                <span id="schedule-toggle-knob" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white border-2 border-slate-900 transition-transform translate-x-6"></span>
+                            </span>
+                            <span id="schedule-toggle-label" class="text-[11px] font-extrabold w-6">ON</span>
+                        </button>
+                        <input type="file" id="scheduleImageInput" accept="image/*" class="hidden" onchange="handleScheduleImage(event)">
+                        <button type="button" onclick="document.getElementById('scheduleImageInput').click()" class="inline-flex items-center space-x-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs border-2 border-slate-900 shadow-[3px_3px_0_0_#64748b] transition-all">
+                            <i data-lucide="image-plus" class="w-4 h-4"></i>
+                            <span id="schedule-upload-label">Upload Image</span>
+                        </button>
+                        <button type="button" id="schedule-remove-btn" onclick="removeScheduleImage()" class="hidden inline-flex items-center space-x-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold px-4 py-2 rounded-xl text-xs border-2 border-slate-900 shadow-[3px_3px_0_0_#64748b] transition-all">
+                            <i data-lucide="trash" class="w-4 h-4"></i>
+                            <span>Remove Image</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="schedule-image-wrap" class="hidden">
+                    <img id="scheduleImg" src="" alt="Schedule" class="block mx-auto max-w-full h-auto">
+                </div>
+                <p id="schedule-empty" class="text-center text-xs font-bold text-slate-400 py-10">No schedule image yet. Click Upload Image.</p>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- MODALS -->
+    <!-- MODAL RECEIPT (paste / upload) -->
+    <div id="modal-receipt" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="kew-theme bg-white border border-slate-300 rounded-2xl w-full max-w-sm max-h-[92vh] overflow-y-auto shadow-xl">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+                <h3 id="receiptTitle" class="font-bold text-slate-900 text-sm">Paste Receipt</h3>
+                <button type="button" onclick="closeReceiptModal()" class="text-slate-500 hover:text-rose-600 text-xl font-bold leading-none">&times;</button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1">What was this expense for?</label>
+                    <select id="receiptCategory" onchange="onReceiptCategoryChange()" class="clean-input w-full px-3 py-1.5 text-xs font-semibold text-slate-800">
+                        <option value="" disabled selected>Select expense type</option>
+                    </select>
+                </div>
+                <div id="receiptDateRow" class="hidden">
+                    <label class="block text-xs font-bold text-slate-600 mb-1">Date</label>
+                    <input type="date" id="receiptDate" class="clean-input w-full px-3 py-1.5 text-xs font-semibold text-slate-800">
+                </div>
+                <div id="receiptUploadRow" class="hidden">
+                    <button type="button" onclick="chooseReceiptFile()" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg border border-slate-900 transition flex items-center justify-center gap-2"><i class="ph-bold ph-upload-simple"></i> Upload File or Image</button>
+                    <input type="file" id="receiptFile" accept="image/*,application/pdf,.pdf" class="hidden" onchange="onReceiptFileChosen(event)">
+                </div>
+                <div id="receiptPasteRow" class="hidden space-y-1">
+                    <button type="button" onclick="pasteReceiptFromClipboard()" class="w-full text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white py-2.5 rounded-lg border border-slate-900 transition">Paste from Clipboard (Image or File)</button>
+                    <div id="receiptPasteBox" contenteditable="true" inputmode="none" spellcheck="false" tabindex="0"
+                        class="border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 px-3 py-4 text-center text-[11px] font-semibold text-slate-500 focus:outline-none focus:border-slate-900 focus:bg-sky-50 cursor-text select-none">
+                        Copied a <span class="font-extrabold text-slate-700">file</span> or <span class="font-extrabold text-slate-700">image</span>? Click here and press <span class="font-extrabold text-slate-700">Ctrl + V</span> (Cmd + V)
+                    </div>
+                </div>
+                <div id="receiptStatus" class="hidden text-xs font-bold px-3 py-2 rounded-lg border bg-slate-50 text-slate-700 border-slate-300"></div>
+                <div id="receiptAmountRow" class="hidden space-y-1">
+                    <label class="block text-xs font-bold text-slate-600">Total amount (RM)</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" step="0.01" min="0" id="receiptAmount" placeholder="0.00" class="clean-input flex-1 px-3 py-1.5 text-sm font-bold text-slate-900 text-right">
+                        <button type="button" id="receiptSaveBtn" onclick="saveReceiptManually()" class="text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md border border-slate-900 transition">Add to Records</button>
+                    </div>
+                </div>
+                <div class="flex justify-end pt-2 border-t border-slate-200">
+                    <button type="button" onclick="closeReceiptModal()" class="text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-1.5 rounded-md border border-slate-300 transition">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TETAPAN POMODORO (MINIT SAHAJA) -->
+    <div id="modal-pomo" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="neo-box bg-white p-4 rounded-xl w-full max-w-xs">
+            <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
+                <h3 class="font-heading text-xs font-extrabold uppercase"><i class="fa-solid fa-stopwatch text-red-600"></i> Pomodoro Settings</h3>
+                <button onclick="closePomoModal()" class="text-black hover:text-red-600 text-lg font-bold">&times;</button>
+            </div>
+            
+            <form onsubmit="savePomoSettings(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold mb-1">Focus Time (Minutes):</label>
+                    <input type="number" id="inputPomoFocus" min="1" max="180" class="w-full neo-box-sm p-1.5 rounded font-bold" required>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-black">
+                    <button type="button" onclick="closePomoModal()" class="neo-btn bg-gray-200 px-3 py-1 rounded font-bold">Cancel</button>
+                    <button type="submit" class="neo-btn bg-yellow-400 px-3 py-1 rounded font-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TETAPAN MINGGU AKADEMIK -->
+    <div id="modal-week" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="neo-box bg-white p-4 rounded-xl w-full max-w-xs">
+            <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
+                <h3 class="font-heading text-xs font-extrabold uppercase"><i class="fa-solid fa-calendar-day"></i> Academic Week Settings</h3>
+                <button onclick="closeWeekModal()" class="text-black hover:text-red-600 text-lg font-bold">&times;</button>
+            </div>
+
+            <form onsubmit="saveWeekSettings(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold mb-1">Current Week:</label>
+                    <input type="number" id="inputCurrentWeekNum" min="1" max="25" class="w-full neo-box-sm p-1.5 rounded font-bold shadow-none" required>
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">Reference Date:</label>
+                    <input type="date" id="inputWeekRefDate" class="w-full neo-box-sm p-1.5 rounded font-bold shadow-none" required>
+                    <p class="text-[10px] font-semibold text-slate-500 mt-1">The week counts up automatically: it goes up by 1 every 7 days starting from this date.</p>
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">Total Weeks in Semester:</label>
+                    <input type="number" id="inputTotalSemWeeks" min="1" max="25" value="14" class="w-full neo-box-sm p-1.5 rounded font-bold shadow-none" required>
+                </div>
+                <div class="flex justify-end gap-2 pt-2 border-t border-black">
+                    <button type="button" onclick="closeWeekModal()" class="neo-btn bg-gray-200 px-3 py-1 rounded font-bold">Cancel</button>
+                    <button type="submit" class="neo-btn bg-yellow-400 px-3 py-1 rounded font-bold">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL SUNTING PROFIL & AKADEMIK -->
+    <div id="modal-profile-edit" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="neo-box bg-white p-4 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
+                <h3 class="font-heading text-xs font-extrabold uppercase"><i class="fa-solid fa-user-gear"></i> Edit Profile & Academics</h3>
+                <button onclick="closeProfileModal()" class="text-black hover:text-red-600 text-lg font-bold">&times;</button>
+            </div>
+
+            <form id="profileForm" onsubmit="saveProfile(event)" class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-bold mb-1">Student Name:</label>
+                    <input type="text" id="inputName" class="w-full neo-box-sm p-1.5 rounded font-bold shadow-none" required>
+                </div>
+                <div>
+                    <label class="block font-bold mb-1">Course / Study Programme:</label>
+                    <input type="text" id="inputCourse" class="w-full neo-box-sm p-1.5 rounded font-bold shadow-none" required>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 border-t border-b border-gray-300 py-2 my-2">
+                    <div>
+                        <label class="block font-bold mb-1">Current CGPA:</label>
+                        <input type="number" step="0.01" min="0" max="4.00" id="inputCgpaVal" class="w-full neo-box-sm p-1.5 rounded font-bold shadow-none" required>
+                    </div>
+                    <div>
+                        <label class="block font-bold mb-1">Target CGPA:</label>
+                        <input type="number" step="0.01" min="0" max="4.00" id="inputTargetGpaVal" class="w-full neo-box-sm p-1.5 rounded font-bold shadow-none" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-1"><i class="fa-solid fa-image"></i> Choose Avatar:</label>
+                    <div class="flex items-center gap-3">
+                        <button type="button" class="avatar-pick" data-preset="preset:avatar-boy" onclick="pickPresetAvatar(this)" title="Avatar 1"><img alt="Avatar 1"></button>
+                        <button type="button" class="avatar-pick" data-preset="preset:avatar-girl" onclick="pickPresetAvatar(this)" title="Avatar 2"><img alt="Avatar 2"></button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block font-bold mb-1"><i class="fa-solid fa-panorama"></i> Header Banner Wallpaper:</label>
+                    <div class="flex items-center gap-3">
+                        <button type="button" class="wall-pick" data-preset="preset:wall-monument" onclick="pickPresetWall(this)" title="Wallpaper 1"><img alt="Wallpaper 1"></button>
+                        <button type="button" class="wall-pick" data-preset="preset:wall-forest" onclick="pickPresetWall(this)" title="Wallpaper 2"><img alt="Wallpaper 2"></button>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-2 border-t border-black">
+                    <button type="button" onclick="closeProfileModal()" class="neo-btn bg-gray-200 px-3 py-1.5 rounded font-bold">Cancel</button>
+                    <button type="submit" class="neo-btn bg-yellow-400 px-4 py-1.5 rounded font-bold">Save Profile</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH KURSUS -->
+    <div id="modal-course" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+        <div class="neo-box bg-white p-4 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
+                <h3 id="courseModalTitle" class="font-heading text-xs font-extrabold uppercase">Add New Course</h3>
+                <button onclick="closeCourseModal()" class="text-black hover:text-red-600 text-lg font-bold">&times;</button>
+            </div>
+            
+            <div id="courseAutofillNote" class="hidden mb-3 text-[11px] font-bold leading-snug border border-black rounded-lg bg-gray-50 px-3 py-2"></div>
+
+            <form id="courseForm" onsubmit="saveCourse(event)" class="space-y-3 text-xs">
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block font-bold mb-1">Course Code:</label>
+                        <input type="text" id="inputCourseCode" placeholder="CSC584" class="w-full neo-box-sm p-1.5 rounded font-bold uppercase" required>
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block font-bold mb-1">Course Name:</label>
+                        <input type="text" id="inputCourseName" placeholder="Enterprise Programming" class="w-full neo-box-sm p-1.5 rounded font-bold" required>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-1">Lecturer Name (optional):</label>
+                    <input type="text" id="inputCourseLecturer" placeholder="Lecturer name" class="w-full neo-box-sm p-1.5 rounded font-bold">
+                </div>
+
+                <div>
+                    <label class="block font-bold mb-1">Number of Chapters (Syllabus):</label>
+                    <input type="number" id="inputBabCount" min="1" max="25" placeholder="6" class="w-full neo-box-sm p-1.5 rounded font-bold" required>
+                </div>
+
+                <!-- DYNAMIC ASSESSMENT INPUTS -->
+                <div class="border-t-2 border-black/20 pt-2">
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="font-heading font-extrabold text-[11px] uppercase">Assessment List:</label>
+                        <button type="button" onclick="addAssessmentInputRow()" class="neo-btn bg-emerald-300 hover:bg-emerald-200 text-black px-2 py-0.5 rounded text-[9px] font-bold">
+                            + Assessment
+                        </button>
+                    </div>
+                    <div id="assessmentInputsContainer" class="space-y-2">
+                        <!-- Dynamic rows -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 pt-3 border-t border-black">
+                    <button type="button" onclick="closeCourseModal()" class="neo-btn bg-gray-200 px-3 py-1.5 rounded font-bold">Cancel</button>
+                    <button type="submit" id="courseSubmitBtn" class="neo-btn bg-yellow-400 px-4 py-1.5 rounded font-bold">Save Course</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform transition-all duration-300 bg-slate-900 text-white px-4 py-2.5 rounded-lg border border-slate-800 shadow-xl flex items-center gap-2 text-xs font-semibold translate-y-20 opacity-0">
+        <i id="toastIcon" class="ph-bold ph-check-circle text-emerald-400 text-base"></i>
+        <span id="toastMsg">Action successful.</span>
+    </div>
+
+    <!-- JavaScript app (susunan penting: jangan ubah turutan) -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/presets.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/sync.js"></script>
+    <script src="js/realtime.js"></script>
+    <script src="js/navigation.js"></script>
+    <script src="js/dashboard.js"></script>
+    <script src="js/course-outline.js"></script>
+    <script src="js/finance.js"></script>
+    <script src="js/receipt.js"></script>
+    <script src="js/start-page.js"></script>
+    <script src="js/render.js"></script>
+    <script src="js/schedule.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/main.js"></script>
+    <!-- PWA service worker -->
+    <script src="js/pwa.js"></script>
+</body>
+</html>
