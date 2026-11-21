@@ -20,24 +20,31 @@
     <meta name="apple-mobile-web-app-title" content="Owlnest">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
-    <!-- Tailwind CSS CDN -->
+    <!-- Warna latar serta-merta (elak kelip putih bila app dibuka) -->
+    <style>html,body{background:#F5F1E5}#startSlots{max-height:38vh;overflow:auto}</style>
+    <link rel="dns-prefetch" href="https://unpkg.com">
+    <link rel="dns-prefetch" href="https://cdn.jsdelivr.net">
+    <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
+
+    <!-- Tailwind CSS CDN (perlu awal untuk gaya) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="js/tailwind-config.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Fonts -->
+    <!-- Library lain: defer = tidak menyekat paparan, turutan tetap terjaga -->
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Fonts + ikon: tidak menyekat render -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@500;600;700&display=swap" rel="stylesheet">
-    <!-- Icon libraries -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous"></script>
-    <!-- Tesseract OCR (scan resit) -->
-    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
-    <!-- PDF.js (baca resit PDF) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@500;600;700&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Lexend:wght@500;600;700&display=swap">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    </noscript>
+    <script defer src="https://unpkg.com/@phosphor-icons/web" crossorigin="anonymous"></script>
+    <!-- Tesseract OCR (scan resit) + PDF.js (baca resit PDF) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <!-- Stylesheet app -->
     <link rel="stylesheet" href="css/base.css">
@@ -111,23 +118,21 @@
                         <i data-lucide="arrow-right" class="w-4 h-4"></i>
                     </button>
                 </div>
-                <div id="start-paste-panel">
-                    <div class="text-center mb-2">
-                        <h2 class="font-heading text-[11px] font-extrabold uppercase tracking-wide inline-block">Paste Receipt <span class="normal-case font-bold text-slate-600">· click a category, then Ctrl + V</span></h2>
-                        <button type="button" onclick="pasteIntoActiveSlot()" class="ml-2 align-middle text-[10px] font-bold bg-white hover:bg-gray-100 text-black px-2 py-0.5 rounded-md border border-black">Paste from clipboard</button>
-                    </div>
-                    <div id="startSlots"></div>
-                </div>
                 <div id="start-image-wrap" class="hidden">
                     <img id="startScheduleImg" src="" alt="Schedule" class="block mx-auto max-w-full h-auto">
                 </div>
                 <p id="start-empty" class="hidden text-center text-xs font-bold text-slate-400 py-10">No schedule image yet. Upload one in the Schedule page.</p>
+                <div id="start-paste-panel" class="text-center">
+                    <button type="button" id="startPasteToggle" onclick="toggleStartPaste()" aria-expanded="false" class="text-[10px] font-bold bg-white hover:bg-gray-100 text-black px-2 py-0.5 rounded-md border border-black">Paste Receipt <span id="startPasteArrow">▾</span></button>
+                    <button type="button" id="startPasteBtn" onclick="pasteIntoActiveSlot()" class="hidden ml-1 text-[10px] font-bold bg-white hover:bg-gray-100 text-black px-2 py-0.5 rounded-md border border-black">Paste from clipboard</button>
+                    <div id="startSlots" class="hidden mt-2 text-left"></div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Mobile Header -->
-    <header class="md:hidden bg-white/90 backdrop-blur-md border-b-2 border-slate-900 px-4 py-3 flex items-center justify-between z-30 shadow-[0_4px_0_0_#64748b] shrink-0">
+    <header class="md:hidden bg-white border-b-2 border-slate-900 px-4 py-3 flex items-center justify-between z-30 shadow-[0_4px_0_0_#64748b] shrink-0">
         <div class="flex items-center space-x-2">
             <span class="brand-wordmark text-base">Owlnest</span>
         </div>
@@ -329,7 +334,7 @@
                         <svg viewBox="0 0 260 148" class="w-full max-w-[190px]" role="img" aria-label="Financial level meter">
                             <path d="M12.00 130.00A118 118 0 0 1 26.10 74.06L66.61 95.87A72 72 0 0 0 58.00 130.00Z" fill="#4CAF3A"/><path d="M29.60 67.99A118 118 0 0 1 67.99 29.60L92.17 68.74A72 72 0 0 0 68.74 92.17Z" fill="#78DD4F"/><path d="M74.06 26.10A118 118 0 0 1 126.50 12.05L127.86 58.03A72 72 0 0 0 95.87 66.61Z" fill="#FFFC52"/><path d="M133.50 12.05A118 118 0 0 1 185.94 26.10L164.13 66.61A72 72 0 0 0 132.14 58.03Z" fill="#F6CB44"/><path d="M192.01 29.60A118 118 0 0 1 230.40 67.99L191.26 92.17A72 72 0 0 0 167.83 68.74Z" fill="#E85625"/><path d="M233.90 74.06A118 118 0 0 1 248.00 130.00L202.00 130.00A72 72 0 0 0 193.39 95.87Z" fill="#E63427"/>
                             <g transform="translate(130 130)">
-                                <g id="meterNeedle" style="transform: rotate(-90deg); transition: transform 1.1s cubic-bezier(.34,1.4,.5,1);">
+                                <g id="meterNeedle" style="transform: rotate(-90deg); transition: transform .45s ease-out;">
                                     <polygon points="0,-64 -5.5,-5 5.5,-5" fill="#000"/>
                                     <circle cx="0" cy="0" r="9" fill="#fff" stroke="#000" stroke-width="4.5"/>
                                 </g>
@@ -518,7 +523,7 @@
 
     <!-- MODALS -->
     <!-- MODAL RECEIPT (paste / upload) -->
-    <div id="modal-receipt" class="fixed inset-0 bg-slate-950/50 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="modal-receipt" class="fixed inset-0 bg-slate-950/50 hidden z-50 flex items-center justify-center p-4">
         <div class="kew-theme bg-white border border-slate-300 rounded-2xl w-full max-w-sm max-h-[92vh] overflow-y-auto shadow-xl">
             <div class="flex items-center justify-between px-5 py-4 border-b border-slate-200">
                 <h3 id="receiptTitle" class="font-bold text-slate-900 text-sm">Paste Receipt</h3>
@@ -562,7 +567,7 @@
     </div>
 
     <!-- MODAL TETAPAN POMODORO (MINIT SAHAJA) -->
-    <div id="modal-pomo" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="modal-pomo" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
         <div class="neo-box bg-white p-4 rounded-xl w-full max-w-xs">
             <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
                 <h3 class="font-heading text-xs font-extrabold uppercase"><i class="fa-solid fa-stopwatch text-red-600"></i> Pomodoro Settings</h3>
@@ -584,7 +589,7 @@
     </div>
 
     <!-- MODAL TETAPAN MINGGU AKADEMIK -->
-    <div id="modal-week" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="modal-week" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
         <div class="neo-box bg-white p-4 rounded-xl w-full max-w-xs">
             <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
                 <h3 class="font-heading text-xs font-extrabold uppercase"><i class="fa-solid fa-calendar-day"></i> Academic Week Settings</h3>
@@ -614,7 +619,7 @@
     </div>
 
     <!-- MODAL SUNTING PROFIL & AKADEMIK -->
-    <div id="modal-profile-edit" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="modal-profile-edit" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
         <div class="neo-box bg-white p-4 rounded-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
                 <h3 class="font-heading text-xs font-extrabold uppercase"><i class="fa-solid fa-user-gear"></i> Edit Profile & Academics</h3>
@@ -666,7 +671,7 @@
     </div>
 
     <!-- MODAL TAMBAH KURSUS -->
-    <div id="modal-course" class="fixed inset-0 bg-black/60 backdrop-blur-sm hidden z-50 flex items-center justify-center p-4">
+    <div id="modal-course" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4">
         <div class="neo-box bg-white p-4 rounded-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div class="flex items-center justify-between border-b-2 border-black pb-2 mb-3">
                 <h3 id="courseModalTitle" class="font-heading text-xs font-extrabold uppercase">Add New Course</h3>
@@ -725,23 +730,36 @@
     </div>
 
     <!-- JavaScript app (susunan penting: jangan ubah turutan) -->
-    <script src="js/config.js"></script>
-    <script src="js/utils.js"></script>
-    <script src="js/presets.js"></script>
-    <script src="js/state.js"></script>
-    <script src="js/sync.js"></script>
-    <script src="js/realtime.js"></script>
-    <script src="js/navigation.js"></script>
-    <script src="js/dashboard.js"></script>
-    <script src="js/course-outline.js"></script>
-    <script src="js/finance.js"></script>
-    <script src="js/receipt.js"></script>
-    <script src="js/start-page.js"></script>
-    <script src="js/render.js"></script>
-    <script src="js/schedule.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/main.js"></script>
+    <script defer src="js/config.js"></script>
+    <script defer src="js/utils.js"></script>
+    <script defer src="js/presets.js"></script>
+    <script defer src="js/state.js"></script>
+    <script defer src="js/sync.js"></script>
+    <script defer src="js/realtime.js"></script>
+    <script defer src="js/navigation.js"></script>
+    <script defer src="js/dashboard.js"></script>
+    <script defer src="js/course-outline.js"></script>
+    <script defer src="js/finance.js"></script>
+    <script defer src="js/receipt.js"></script>
+    <script defer src="js/start-page.js"></script>
+    <script defer src="js/render.js"></script>
+    <script defer src="js/schedule.js"></script>
+    <script defer src="js/auth.js"></script>
+    <script defer src="js/main.js"></script>
     <!-- PWA service worker -->
-    <script src="js/pwa.js"></script>
+    <script defer src="js/pwa.js"></script>
+    <script>
+    function toggleStartPaste(force){
+        var box=document.getElementById('startSlots'),btn=document.getElementById('startPasteBtn'),
+            t=document.getElementById('startPasteToggle'),ar=document.getElementById('startPasteArrow');
+        if(!box)return;
+        var open=typeof force==='boolean'?force:box.classList.contains('hidden');
+        box.classList.toggle('hidden',!open);btn.classList.toggle('hidden',!open);
+        t.setAttribute('aria-expanded',open);ar.textContent=open?'▴':'▾';
+        try{localStorage.setItem('owlnest.startPasteOpen',open?'1':'0');}catch(e){}
+        if(open&&typeof warmOcr==='function')warmOcr(); // sediakan OCR di belakang tabir
+    }
+    try{if(localStorage.getItem('owlnest.startPasteOpen')==='1')document.addEventListener('DOMContentLoaded',function(){toggleStartPaste(true);});}catch(e){}
+    </script>
 </body>
 </html>
